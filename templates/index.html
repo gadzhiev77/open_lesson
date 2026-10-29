@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор ИМТ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .formula {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 18px;
+            color: #444;
+        }
+        .formula span {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.02);
+        }
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        .result .bmi-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .result .diagnosis {
+            font-size: 20px;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .diagnosis.normal { background: #d4edda; color: #155724; }
+        .diagnosis.underweight { background: #fff3cd; color: #856404; }
+        .diagnosis.overweight { background: #ffe5d0; color: #9e4a00; }
+        .diagnosis.obese { background: #f8d7da; color: #721c24; }
+        .diagnosis.severe { background: #e2d5f5; color: #4a148c; }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .table-link {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+        }
+        .table-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .bmi-table {
+            margin-top: 20px;
+            font-size: 13px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .bmi-table th, .bmi-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .bmi-table th {
+            background: #667eea;
+            color: white;
+        }
+        .bmi-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Индекс массы тела</h1>
+        <p class="subtitle">Калькулятор ИМТ с диагностикой</p>
+
+        <div class="formula">
+            ИМТ = <span>масса (кг)</span> / <span>рост² (м²)</span>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="weight">Вес (кг):</label>
+                <input type="number" id="weight" name="weight" step="0.1" min="0.1"
+                       value="{{ weight }}" placeholder="Например: 70" required>
+            </div>
+            <div class="form-group">
+                <label for="height">Рост (м):</label>
+                <input type="number" id="height" name="height" step="0.01" min="0.1"
+                       value="{{ height }}" placeholder="Например: 1.75" required>
+            </div>
+            <button type="submit">Рассчитать ИМТ</button>
+        </form>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if bmi is not none %}
+            <div class="result">
+                <div class="bmi-value">{{ bmi }}</div>
+                <div class="diagnosis
+                    {% if diagnosis.startswith('Норма') %}normal
+                    {% elif diagnosis.startswith('Недостаточная') or diagnosis.startswith('Выраженный') %}underweight
+                    {% elif diagnosis.startswith('Избыточная') %}overweight
+                    {% elif 'ожирение' in diagnosis.lower() and 'третьей' not in diagnosis.lower() %}obese
+                    {% elif 'третьей' in diagnosis.lower() %}severe
+                    {% endif %}">
+                    {{ diagnosis }}
+                </div>
+            </div>
+        {% endif %}
+
+        <table class="bmi-table">
+            <thead>
+                <tr>
+                    <th>ИМТ</th>
+                    <th>Диагноз</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>≤ 16</td><td>Выраженный дефицит массы тела</td></tr>
+                <tr><td>16 – 18.5</td><td>Недостаточная масса тела</td></tr>
+                <tr><td>18.5 – 24.99</td><td>Норма</td></tr>
+                <tr><td>25 – 30</td><td>Избыточная масса тела</td></tr>
+                <tr><td>30 – 35</td><td>Ожирение I степени</td></tr>
+                <tr><td>35 – 40</td><td>Ожирение II степени</td></tr>
+                <tr><td>≥ 40</td><td>Ожирение III степени</td></tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
